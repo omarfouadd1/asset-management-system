@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset System</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{font-family:Arial;margin:0;background:#f5f7fa}
+.top{background:#0a2540;color:#fff;padding:15px}
+.nav{display:flex;gap:10px;padding:10px;background:#fff}
+.nav button{padding:8px;border:none;cursor:pointer}
+.container{padding:15px}
+.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:10px}
+input,select{padding:8px;margin:5px;width:100%}
+button.primary{background:#0a2540;color:#fff}
+.badge{padding:4px 8px;border-radius:5px}
+.active{background:green;color:#fff}
+.maint{background:orange;color:#fff}
+</style>
+</head>
+
+<body>
+
+<div class="top">📦 Asset Management System</div>
+
+<div class="nav">
+<button onclick="go('dashboard')">Dashboard</button>
+<button onclick="go('assets')">Assets</button>
+<button onclick="go('scanner')">Scanner</button>
+</div>
+
+<div class="container" id="app"></div>
+
+<script>
+
+// ================= STORAGE =================
+let assets = JSON.parse(localStorage.getItem("assets")) || [];
+
+function save(){
+  localStorage.setItem("assets", JSON.stringify(assets));
+}
+
+// ================= NAV =================
+function go(page){
+  if(page==='dashboard') renderDashboard();
+  if(page==='assets') renderAssets();
+  if(page==='scanner') renderScanner();
+}
+
+// ================= DASHBOARD =================
+function renderDashboard(){
+  document.getElementById("app").innerHTML = `
+    <div class="card">
+      <h3>Total Assets: ${assets.length}</h3>
+    </div>
+  `;
+}
+
+// ================= ASSETS =================
+function renderAssets(){
+  document.getElementById("app").innerHTML = `
+    <div class="card">
+      <h3>Add Asset</h3>
+      <input id="name" placeholder="Name">
+      <input id="serial" placeholder="Serial">
+      <select id="status">
+        <option>active</option>
+        <option>maintenance</option>
+      </select>
+      <button class="primary" onclick="addAsset()">Add</button>
+    </div>
+
+    <div class="card">
+      <h3>Assets List</h3>
+      <div id="list"></div>
+    </div>
+  `;
+  renderList();
+}
+
+function addAsset(){
+  const name = document.getElementById("name").value;
+  const serial = document.getElementById("serial").value;
+  const status = document.getElementById("status").value;
+
+  if(!name || !serial){
+    alert("Enter data");
+    return;
+  }
+
+  assets.push({
+    id:"AST-"+Date.now(),
+    name,
+    serial,
+    status
+  });
+
+  save();
+  renderAssets();
+}
+
+function renderList(){
+  const list = document.getElementById("list");
+  list.innerHTML="";
+
+  assets.forEach(a=>{
+    list.innerHTML += `
+      <div>
+        ${a.name} - ${a.serial}
+        <span class="badge ${a.status==='active'?'active':'maint'}">${a.status}</span>
+        <button onclick="del('${a.id}')">❌</button>
+      </div>
+    `;
+  });
+}
+
+function del(id){
+  assets = assets.filter(a=>a.id!==id);
+  save();
+  renderAssets();
+}
+
+// ================= SCANNER =================
+function renderScanner(){
+  document.getElementById("app").innerHTML = `
+    <div class="card">
+      <h3>Scanner</h3>
+      <div id="reader" style="width:300px"></div>
+      <button onclick="startScan()">Start Scan</button>
+    </div>
+
+    <div class="card">
+      <h3>Result</h3>
+      <div id="result">---</div>
+    </div>
+  `;
+}
+
+function startScan(){
+  const scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (decodedText) => {
+      search(decodedText);
+      scanner.stop();
+    }
+  );
+}
+
+function search(code){
+  const a = assets.find(x=>x.id===code || x.serial===code);
+
+  const result = document.getElementById("result");
+
+  if(a){
+    result.innerHTML = `
+      ✅ Found <br>
+      ${a.name} <br>
+      ${a.serial}
+    `;
+  }else{
+    result.innerHTML = "❌ Not Found";
+  }
+}
+
+// ================= INIT =================
+go('dashboard');
+
+</script>
+
+</body>
+</html>

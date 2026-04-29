@@ -1244,9 +1244,7 @@ function deleteMaint(id){
 }
 
 /* ════════════════════════════════════════════════
-   SCANNER
-════════════════════════════════════════════════ */
-function renderScanner(){
+  function renderScanner(){
   setPageInfo('Scanner','امسح الباركود أو ابحث يدوياً بالكود');
   document.getElementById('app').innerHTML=`
     <div class="scanner-layout">
@@ -1261,58 +1259,119 @@ function renderScanner(){
           <button class="btn primary" onclick="startScanner()">▶ بدء المسح</button>
           <button class="btn ghost" onclick="stopScanner()">⏹ إيقاف</button>
         </div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.7">المسح يعتمد كود الأصل AST-XXXX. يشتغل على HTTPS من الموبايل.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7">
+          المسح يعتمد كود الأصل AST-XXXX. يشتغل على HTTPS من الموبايل.
+        </div>
       </div>
+
       <div class="card">
         <div class="section-title"><h3>بحث يدوي</h3><span>Asset code / serial</span></div>
         <div style="display:flex;gap:8px;margin-bottom:14px">
-          <input id="scanInput" type="text" placeholder="AST-0001 أو Serial Number" dir="ltr" style="flex:1" onkeydown="if(event.key==='Enter')findAsset(this.value)">
-          <button class="btn primary" onclick="findAsset(document.getElementById('scanInput').value)">بحث</button>
+          <input id="scanInput" type="text" placeholder="AST-0001 أو Serial Number"
+                 dir="ltr" style="flex:1"
+                 onkeydown="if(event.key==='Enter')findAsset(this.value)">
+          <button class="btn primary"
+            onclick="findAsset(document.getElementById('scanInput').value)">بحث</button>
         </div>
-        <div id="scanResult"><div class="empty">النتيجة ستظهر هنا بعد المسح أو البحث.</div></div>
+        <div id="scanResult">
+          <div class="empty">النتيجة ستظهر هنا بعد المسح أو البحث.</div>
+        </div>
       </div>
     </div>`;
 }
 
+/* START SCANNER */
 async function startScanner(){
   stopScanner();
-  const result=document.getElementById('scanResult');
-  if(!window.ZXing||!ZXing.BrowserMultiFormatReader){ if(result) result.innerHTML='<div class="empty">مكتبة المسح لم تُحمّل.</div>'; return; }
-  const reader=new ZXing.BrowserMultiFormatReader();
-  if(result) result.innerHTML='<div class="empty">جاري فتح الكاميرا...</div>';
+
+  const result = document.getElementById('scanResult');
+
+  if(!window.ZXing || !ZXing.BrowserMultiFormatReader){
+    if(result) result.innerHTML = '<div class="empty">مكتبة المسح لم تُحمّل.</div>';
+    return;
+  }
+
+  const reader = new ZXing.BrowserMultiFormatReader();
+
+  if(result) result.innerHTML = '<div class="empty">جاري فتح الكاميرا...</div>';
+
   try{
-    scannerControls=await reader.decodeFromVideoDevice(null,'scannerVideo',(res)=>{
-      if(res){ const v=document.getElementById('scanInput'); if(v) v.value=res.getText(); findAsset(res.getText()); }
-    });
-(result, err) => {
-  if(result){
-    const txt = result.text;
+    scannerControls = await reader.decodeFromVideoDevice(
+      null,
+      'scannerVideo',
+      (res) => {
+        if(res){
+          const txt = res.getText();
 
-    const code = txt.replace("asset:","");
-    openDetails(code);
+          const code = txt.replace("asset:", "");
 
-    codeReader.reset(); // يقفل الكاميرا بعد القراءة
+          const v = document.getElementById('scanInput');
+          if(v) v.value = code;
+
+          openDetails(code);
+
+          try{ reader.reset(); }catch(e){}
+        }
+      }
+    );
+  }catch(e){
+    console.error(e);
+    if(result) result.innerHTML = '<div class="empty">فشل فتح الكاميرا.</div>';
   }
 }
 
+/* STOP SCANNER */
 function stopScanner(){
-  try{ if(scannerControls&&typeof scannerControls.stop==='function') scannerControls.stop(); }catch(e){}
-  scannerControls=null;
+  try{
+    if(scannerControls && typeof scannerControls.stop === 'function'){
+      scannerControls.stop();
+    }
+  }catch(e){}
+  scannerControls = null;
 }
 
+/* FIND ASSET */
 function findAsset(val){
-  const q=String(val||'').trim();
-  const box=document.getElementById('scanResult');
-  if(!q){ if(box) box.innerHTML='<div class="empty">اكتب كود أو سيريال أولاً.</div>'; return; }
-  const a=assets.find(x=>String(x.code).toLowerCase()===q.toLowerCase()||String(x.serial||'').toLowerCase()===q.toLowerCase());
+  const q = String(val||'').trim();
+  const box = document.getElementById('scanResult');
+
+  if(!q){
+    if(box) box.innerHTML='<div class="empty">اكتب كود أو سيريال أولاً.</div>';
+    return;
+  }
+
+  const a = assets.find(x =>
+    String(x.code).toLowerCase()===q.toLowerCase() ||
+    String(x.serial||'').toLowerCase()===q.toLowerCase()
+  );
+
   if(!box) return;
-  if(!a){ box.innerHTML=`<div class="empty"><div style="font-size:32px;margin-bottom:8px">❌</div><div style="font-weight:700;color:#ef4444">لم يتم العثور على الأصل</div><div class="muted" style="margin-top:6px" dir="ltr">${esc(q)}</div></div>`; return; }
+
+  if(!a){
+    box.innerHTML=`
+      <div class="empty">
+        <div style="font-size:32px;margin-bottom:8px">❌</div>
+        <div style="font-weight:700;color:#ef4444">لم يتم العثور على الأصل</div>
+        <div class="muted" style="margin-top:6px" dir="ltr">${esc(q)}</div>
+      </div>`;
+    return;
+  }
+
   box.innerHTML=`
-    <div class="section-title"><h3>✅ تم العثور على الأصل</h3><span class="badge ${statusClass(a.status)}">${esc(a.status)}</span></div>
-    <div style="text-align:center;margin-bottom:14px">
-      <div class="barcode-cell" style="display:inline-block;width:100%;max-width:280px"><svg id="scanBC"></svg></div>
-      <div style="margin-top:10px"><canvas id="scanQR"></canvas></div>
+    <div class="section-title">
+      <h3>✅ تم العثور على الأصل</h3>
+      <span class="badge ${statusClass(a.status)}">${esc(a.status)}</span>
     </div>
+
+    <div style="text-align:center;margin-bottom:14px">
+      <div class="barcode-cell" style="display:inline-block;width:100%;max-width:280px">
+        <svg id="scanBC"></svg>
+      </div>
+      <div style="margin-top:10px">
+        <canvas id="scanQR"></canvas>
+      </div>
+    </div>
+
     <div class="detail-grid">
       <div class="detail"><div class="k">كود الأصل</div><div class="v" dir="ltr">${esc(a.code)}</div></div>
       <div class="detail"><div class="k">الاسم</div><div class="v">${esc(a.name)}</div></div>
@@ -1321,16 +1380,33 @@ function findAsset(val){
       <div class="detail"><div class="k">القسم</div><div class="v">${esc(a.department)}</div></div>
       <div class="detail"><div class="k">القيمة</div><div class="v">${fmtCurrency(a.value)}</div></div>
     </div>
+
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
       <button class="btn success" onclick="openDetails('${esc(a.code)}')">فتح التفاصيل</button>
       <button class="btn primary" onclick="openAssetForm('${esc(a.code)}')">تعديل</button>
       <button class="btn warn" onclick="printLabel('${esc(a.code)}')">🖨️ طباعة</button>
-    </div>`;
+    </div>
+  `;
+
   requestAnimationFrame(()=>{
     const svg=document.getElementById('scanBC');
-    if(svg){ try{ JsBarcode(svg,a.code,{format:'CODE128',lineColor:'#0f172a',background:'#ffffff',width:1.5,height:56,displayValue:true,fontSize:14,margin:2}); }catch(e){} }
+    if(svg){
+      try{
+        JsBarcode(svg,a.code,{
+          format:'CODE128',
+          width:1.5,
+          height:56,
+          displayValue:true
+        });
+      }catch(e){}
+    }
+
     const qr=document.getElementById('scanQR');
-    if(qr){ try{ QRCode.toCanvas(qr,a.code,{width:80,margin:1,color:{dark:'#0f172a',light:'#ffffff'}}); }catch(e){} }
+    if(qr){
+      try{
+        QRCode.toCanvas(qr,"asset:"+a.code,{width:80});
+      }catch(e){}
+    }
   });
 }
 

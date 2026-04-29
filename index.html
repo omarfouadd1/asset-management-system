@@ -245,7 +245,7 @@
         <input id="fdt" type="date">
       </div>
       <div class="ff">
-        <label>القيمة (ر.س)</label>
+        <label>القيمة (ج.م)</label>
         <input id="fv" type="number" placeholder="0" min="0">
       </div>
       <div class="ff">
@@ -337,7 +337,7 @@ function dash() {
     <div class="metric blue">  <div class="val">${tot}</div>   <div class="lbl">إجمالي الأصول</div></div>
     <div class="metric green"> <div class="val">${act}</div>   <div class="lbl">نشطة</div></div>
     <div class="metric amber"> <div class="val">${mnt}</div>   <div class="lbl">في الصيانة</div></div>
-    <div class="metric cyan">  <div class="val">${tv.toLocaleString()} <span style="font-size:14px">ر.س</span></div><div class="lbl">إجمالي القيمة</div></div>
+    <div class="metric cyan">  <div class="val">${tv.toLocaleString()} <span style="font-size:14px">ج.م</span></div><div class="lbl">إجمالي القيمة</div></div>
   </div>
   <div class="dash-grid">
     <div class="card">
@@ -402,7 +402,7 @@ function assetTab(q='', cf='all') {
           <th>الفئة</th>
           <th>القسم</th>
           <th>المسؤول</th>
-          <th>القيمة (ر.س)</th>
+          <th>القيمة (ج.م)</th>
           <th>الحالة</th>
           <th>إجراءات</th>
         </tr>
@@ -517,7 +517,7 @@ function showSR(a) {
     <div class="rrow"><span class="k">المسؤول</span>    <span class="v">${a.user}</span></div>
     <div class="rrow"><span class="k">تاريخ الاستلام</span><span class="v">${new Date(a.date).toLocaleDateString('ar-SA')}</span></div>
     <div class="rrow"><span class="k">Serial Number</span><span class="v" style="direction:ltr;font-family:monospace">${a.serial}</span></div>
-    <div class="rrow"><span class="k">القيمة</span>     <span class="v">${a.val.toLocaleString()} ر.س</span></div>
+    <div class="rrow"><span class="k">القيمة</span>     <span class="v">${a.val.toLocaleString()} ج.م</span></div>
     ${a.notes ? `<div class="rrow"><span class="k">ملاحظات</span><span class="v">${a.notes}</span></div>` : ''}
     <div class="scan-actions">
       <button class="btn" onclick="go('assets')">عرض في القائمة</button>
@@ -632,13 +632,13 @@ function runRep(t) {
 
   if (t === 'inv') {
     el.innerHTML = `<div class="card">
-      <h3>جرد كامل — ${assets.length} أصل | الإجمالي: ${tot.toLocaleString()} ر.س</h3>
+      <h3>جرد كامل — ${assets.length} أصل | الإجمالي: ${tot.toLocaleString()} ج.م</h3>
       <div style="overflow-x:auto"><table style="min-width:auto">
         <thead><tr><th>الكود</th><th>الاسم</th><th>الفئة</th><th>القسم</th><th>المسؤول</th><th>القيمة</th><th>الحالة</th></tr></thead>
         <tbody>${assets.map(a=>`<tr>
           <td><span class="tbl-id">${a.id}</span></td>
           <td>${ICONS[a.cat]} ${a.name}</td><td>${a.cat}</td><td>${a.dept}</td><td>${a.user}</td>
-          <td style="font-weight:600">${a.val.toLocaleString()} ر.س</td>
+          <td style="font-weight:600">${a.val.toLocaleString()} ج.م</td>
           <td><span class="badge ${a.status==='نشط'?'b-active':'b-maint'}">${a.status}</span></td>
         </tr>`).join('')}</tbody>
       </table></div>
@@ -651,11 +651,11 @@ function runRep(t) {
     const bu = assets.reduce((acc,a) => { if(!acc[a.user])acc[a.user]=[]; acc[a.user].push(a); return acc; }, {});
     el.innerHTML = `<div class="card"><h3>تقرير الحيازة</h3>${Object.entries(bu).map(([u,as]) => `
       <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--border)">
-        <div style="font-weight:600;margin-bottom:8px;font-size:13px">${u} &nbsp;·&nbsp; ${as.length} أصل &nbsp;·&nbsp; ${as.reduce((s,x)=>s+x.val,0).toLocaleString()} ر.س</div>
+        <div style="font-weight:600;margin-bottom:8px;font-size:13px">${u} &nbsp;·&nbsp; ${as.length} أصل &nbsp;·&nbsp; ${as.reduce((s,x)=>s+x.val,0).toLocaleString()} ج.م</div>
         ${as.map(a=>`<div class="ri">
           <div class="ai ${CCLS[a.cat]||'it'}">${ICONS[a.cat]}</div>
           <div class="ri-info"><div class="ri-name">${a.name}</div><div class="ri-sub">${a.id} · ${a.serial}</div></div>
-          <span style="font-size:12px;font-weight:600">${a.val.toLocaleString()} ر.س</span>
+          <span style="font-size:12px;font-weight:600">${a.val.toLocaleString()} ج.م</span>
         </div>`).join('')}
       </div>`).join('')}
     </div>`;
@@ -667,9 +667,9 @@ function runRep(t) {
       <div class="bar-row">
         <span class="bar-lbl" style="width:120px;font-size:12px">${d}</span>
         <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/tot*100)}%;background:var(--bvac)"></div></div>
-        <span class="bar-cnt" style="min-width:110px;font-size:12px">${v.toLocaleString()} ر.س</span>
+        <span class="bar-cnt" style="min-width:110px;font-size:12px">${v.toLocaleString()} ج.م</span>
       </div>`).join('')}
-      <div style="margin-top:16px;font-weight:700;font-size:14px">الإجمالي الكلي: ${tot.toLocaleString()} ر.س</div>
+      <div style="margin-top:16px;font-weight:700;font-size:14px">الإجمالي الكلي: ${tot.toLocaleString()} ج.م</div>
     </div>`;
 
   } else {
@@ -681,8 +681,8 @@ function runRep(t) {
         <tbody>${Object.entries(bc).map(([c,n]) => `<tr>
           <td>${ICONS[c]} ${c}</td>
           <td style="font-weight:600">${n}</td>
-          <td style="font-weight:600">${(bv[c]||0).toLocaleString()} ر.س</td>
-          <td>${Math.round((bv[c]||0)/n).toLocaleString()} ر.س</td>
+          <td style="font-weight:600">${(bv[c]||0).toLocaleString()} ج.م</td>
+          <td>${Math.round((bv[c]||0)/n).toLocaleString()} ج.م</td>
         </tr>`).join('')}</tbody>
       </table></div>
     </div>`;
@@ -726,7 +726,7 @@ function delA(id) {
 }
 
 function expCSV() {
-  const header = ['Asset ID','الاسم','الفئة','القسم','المسؤول','القيمة (ر.س)','الحالة','Serial Number','تاريخ الاستلام','ملاحظات'];
+  const header = ['Asset ID','الاسم','الفئة','القسم','المسؤول','القيمة (ج.م)','الحالة','Serial Number','تاريخ الاستلام','ملاحظات'];
   const rows = assets.map(a => [a.id, a.name, a.cat, a.dept, a.user, a.val, a.status, a.serial, a.date, a.notes]);
   const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });

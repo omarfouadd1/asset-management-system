@@ -525,22 +525,41 @@ const MAINT_KEY     = 'bevatel_maintenance_v2';
 const DARK_KEY      = 'bevatel_dark_v1';
 
 const CATEGORY_ICONS = {
-  'Laptop':'💻','Desktop':'🖥️','Monitor':'🖱️','Printer':'🖨️',
-  'Headset':'🎧','Desk':'🪑','Chair':'💺','Mobile':'📱',
-  'Network':'🌐','Other':'📦'
+const CATEGORY_ICONS = {
+  'Desk':'🪑',
+  'Chair':'💺'
 };
 const STATUS_LABELS    = ['Active','Maintenance','Stored','Retired','Lost'];
 const CONDITION_LABELS = ['New','Good','Fair','Poor'];
 
 const DEMO_ASSETS = [
-  {code:'AST-0001',name:'Dell Latitude 5540',category:'Laptop',model:'Latitude 5540',department:'IT',custodian:'Ahmed Khaled',location:'Cairo HQ - Floor 3',serial:'DL5540-8F12',status:'Active',condition:'Good',purchaseDate:'2024-01-10',value:45000,supplier:'Tech House',warrantyEnd:'2026-01-10',notes:'Assigned to IT support.',createdAt:'2024-01-10T09:00:00.000Z',updatedAt:'2025-04-10T10:20:00.000Z'},
-  {code:'AST-0002',name:'HP EliteDesk 800 G6',category:'Desktop',model:'EliteDesk 800 G6',department:'Customer Care',custodian:'Sara Mohamed',location:'Alexandria Branch',serial:'HP800G6-2211',status:'Active',condition:'Good',purchaseDate:'2024-02-05',value:32000,supplier:'OfficePro',warrantyEnd:'2026-02-05',notes:'Front desk workstation.',createdAt:'2024-02-05T11:15:00.000Z',updatedAt:'2025-04-17T08:10:00.000Z'},
-  {code:'AST-0003',name:'Jabra Evolve2 85',category:'Headset',model:'Evolve2 85',department:'Sales',custodian:'Mohamed Saeed',location:'Cairo HQ - Sales Area',serial:'JBR-85-0091',status:'Maintenance',condition:'Fair',purchaseDate:'2024-03-12',value:9800,supplier:'SoundLine',warrantyEnd:'2025-03-12',notes:'Left earcup issue under review.',createdAt:'2024-03-12T13:00:00.000Z',updatedAt:'2025-05-01T09:30:00.000Z'},
-  {code:'AST-0004',name:'Workstation Desk L-Shape',category:'Desk',model:'L-Shape Premium',department:'Administration',custodian:'General Manager',location:'HQ - Executive Office',serial:'DSK-LSH-001',status:'Active',condition:'Good',purchaseDate:'2023-09-01',value:18000,supplier:'OfficePro',warrantyEnd:'2025-09-01',notes:'',createdAt:'2023-09-01T09:00:00.000Z',updatedAt:'2025-02-20T12:00:00.000Z'},
-  {code:'AST-0005',name:'Lenovo ThinkPad X1 Carbon',category:'Laptop',model:'X1 Carbon Gen 10',department:'Sales',custodian:'Nour Ali',location:'Cairo HQ - Sales Floor',serial:'LNV-X1-5510',status:'Stored',condition:'Good',purchaseDate:'2024-01-20',value:52000,supplier:'Tech House',warrantyEnd:'2026-01-20',notes:'Spare device.',createdAt:'2024-01-20T10:30:00.000Z',updatedAt:'2025-03-18T07:50:00.000Z'},
-  {code:'AST-0006',name:'Dell OptiPlex 7090',category:'Desktop',model:'OptiPlex 7090',department:'HR',custodian:'Faisal Omar',location:'HR Office',serial:'DL7090-5533',status:'Active',condition:'Good',purchaseDate:'2024-02-18',value:28000,supplier:'OfficePro',warrantyEnd:'2026-02-18',notes:'HR onboarding station.',createdAt:'2024-02-18T10:00:00.000Z',updatedAt:'2025-04-21T11:25:00.000Z'},
-  {code:'AST-0007',name:'Cisco Access Point 2802',category:'Network',model:'Aironet 2802',department:'IT',custodian:'Network Team',location:'Server Room',serial:'CS-2802-7744',status:'Active',condition:'Good',purchaseDate:'2024-04-02',value:26000,supplier:'NetCore',warrantyEnd:'2026-04-02',notes:'Ceiling mounted AP.',createdAt:'2024-04-02T14:40:00.000Z',updatedAt:'2025-04-25T15:00:00.000Z'},
-  {code:'AST-0008',name:'Canon i-SENSYS Printer',category:'Printer',model:'i-SENSYS LBP',department:'Finance',custodian:'Heba Adel',location:'Finance Office',serial:'CAN-LBP-1110',status:'Maintenance',condition:'Poor',purchaseDate:'2023-11-11',value:34000,supplier:'PrintWorks',warrantyEnd:'2025-11-11',notes:'Paper feed issue.',createdAt:'2023-11-11T10:20:00.000Z',updatedAt:'2025-05-03T13:55:00.000Z'}
+  const DEMO_ASSETS = [
+  {
+    code:'AST-0001',
+    name:'Office Desk',
+    category:'Desk',
+    department:'HR',
+    custodian:'Ahmed',
+    location:'Cairo',
+    serial:'D-001',
+    status:'Active',
+    condition:'Good',
+    value:5000,
+    createdAt:new Date().toISOString()
+  },
+  {
+    code:'AST-0002',
+    name:'Office Chair',
+    category:'Chair',
+    department:'Sales',
+    custodian:'Ali',
+    location:'Alex',
+    serial:'C-001',
+    status:'Active',
+    condition:'Good',
+    value:1500,
+    createdAt:new Date().toISOString()
+  }
 ];
 
 const DEMO_MAINTENANCE = [
@@ -881,7 +900,7 @@ function renderAssetsTable(){
       const svg=document.getElementById(`bc-${a.code}`);
       if(svg){ try{ JsBarcode(svg,a.code,{format:'CODE128',lineColor:'#0f172a',background:'#ffffff',width:1.1,height:36,displayValue:false,margin:0}); }catch(e){} }
       const canvas=document.getElementById(`qr-${a.code}`);
-      if(canvas){ try{ QRCode.toCanvas(canvas,a.code,{width:60,margin:1,color:{dark:'#0f172a',light:'#ffffff'}}); }catch(e){} }
+      if(canvas){ try{ QRCode.toCanvas(canvas,"asset:"+a.code,{width:60,margin:1,color:{dark:'#0f172a',light:'#ffffff'}}); }catch(e){} }
     });
   });
 }
@@ -1265,7 +1284,15 @@ async function startScanner(){
     scannerControls=await reader.decodeFromVideoDevice(null,'scannerVideo',(res)=>{
       if(res){ const v=document.getElementById('scanInput'); if(v) v.value=res.getText(); findAsset(res.getText()); }
     });
-  }catch(e){ if(result) result.innerHTML='<div class="empty">تعذر تشغيل الكاميرا.<br>تأكد من HTTPS والسماح للكاميرا.</div>'; }
+(result, err) => {
+  if(result){
+    const txt = result.text;
+
+    const code = txt.replace("asset:","");
+    openDetails(code);
+
+    codeReader.reset(); // يقفل الكاميرا بعد القراءة
+  }
 }
 
 function stopScanner(){
@@ -1551,6 +1578,27 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 ════════════════════════════════════════════════ */
 updateSidebarCount();
 renderView();
+  // ===== LOGIN SYSTEM =====
+if(localStorage.getItem("login")!=="true"){
+  document.body.innerHTML = `
+    <div style="padding:40px;text-align:center">
+      <h2>Login</h2>
+      <input id="u" placeholder="user"><br><br>
+      <input id="p" type="password"><br><br>
+      <button onclick="login()">Login</button>
+    </div>
+  `;
+}
+
+function login(){
+  if(document.getElementById("u").value==="admin" &&
+     document.getElementById("p").value==="1234"){
+    localStorage.setItem("login","true");
+    location.reload();
+  } else {
+    alert("Wrong login");
+  }
+}
 </script>
 </body>
 </html>

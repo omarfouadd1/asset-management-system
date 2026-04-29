@@ -3,22 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asset System</title>
+<title>Asset Management System</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body{font-family:Arial;margin:0;background:#f5f7fa}
-.top{background:#0a2540;color:#fff;padding:15px}
-.nav{display:flex;gap:10px;padding:10px;background:#fff}
+body{margin:0;font-family:Arial;background:#f4f6f9}
+.top{background:#0a2540;color:#fff;padding:15px;font-size:18px}
+.nav{display:flex;background:#fff;padding:10px;gap:10px}
 .nav button{padding:8px;border:none;cursor:pointer}
 .container{padding:15px}
-.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:10px}
-input,select{padding:8px;margin:5px;width:100%}
-button.primary{background:#0a2540;color:#fff}
-.badge{padding:4px 8px;border-radius:5px}
-.active{background:green;color:#fff}
-.maint{background:orange;color:#fff}
+.card{background:#fff;padding:15px;margin-bottom:15px;border-radius:10px}
+input,select,textarea{width:100%;padding:8px;margin:5px 0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #ddd}
+.badge{padding:4px 8px;border-radius:5px;color:#fff}
+.active{background:green}
+.maintenance{background:orange}
+.stored{background:gray}
+.retired{background:red}
 </style>
 </head>
 
@@ -36,106 +39,132 @@ button.primary{background:#0a2540;color:#fff}
 
 <script>
 
-// ================= STORAGE =================
+// ===== STORAGE =====
 let assets = JSON.parse(localStorage.getItem("assets")) || [];
 
 function save(){
   localStorage.setItem("assets", JSON.stringify(assets));
 }
 
-// ================= NAV =================
-function go(page){
-  if(page==='dashboard') renderDashboard();
-  if(page==='assets') renderAssets();
-  if(page==='scanner') renderScanner();
+// ===== NAV =====
+function go(p){
+  if(p==='dashboard') dashboard();
+  if(p==='assets') assetsPage();
+  if(p==='scanner') scannerPage();
 }
 
-// ================= DASHBOARD =================
-function renderDashboard(){
+// ===== DASHBOARD =====
+function dashboard(){
+  const total = assets.length;
+  const active = assets.filter(a=>a.status==='Active').length;
+  const maint = assets.filter(a=>a.status==='Maintenance').length;
+  const stored = assets.filter(a=>a.status==='Stored').length;
+
   document.getElementById("app").innerHTML = `
-    <div class="card">
-      <h3>Total Assets: ${assets.length}</h3>
-    </div>
+    <div class="card">Total Assets: ${total}</div>
+    <div class="card">Active: ${active}</div>
+    <div class="card">Maintenance: ${maint}</div>
+    <div class="card">Stored: ${stored}</div>
   `;
 }
 
-// ================= ASSETS =================
-function renderAssets(){
+// ===== ASSETS PAGE =====
+function assetsPage(){
   document.getElementById("app").innerHTML = `
     <div class="card">
       <h3>Add Asset</h3>
-      <input id="name" placeholder="Name">
-      <input id="serial" placeholder="Serial">
+      <input id="name" placeholder="Asset Name">
+      <input id="serial" placeholder="Serial Number">
+      <input id="dept" placeholder="Department">
+      <input id="custodian" placeholder="Custodian">
+      <input id="value" type="number" placeholder="Value">
+      <input id="date" type="date">
       <select id="status">
-        <option>active</option>
-        <option>maintenance</option>
+        <option>Active</option>
+        <option>Maintenance</option>
+        <option>Stored</option>
+        <option>Retired</option>
       </select>
-      <button class="primary" onclick="addAsset()">Add</button>
+      <textarea id="notes" placeholder="Notes"></textarea>
+      <button onclick="addAsset()">Add</button>
     </div>
 
     <div class="card">
-      <h3>Assets List</h3>
-      <div id="list"></div>
+      <input placeholder="Search..." oninput="search(this.value)">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Dept</th><th>User</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="list"></tbody>
+      </table>
     </div>
   `;
-  renderList();
+  renderList(assets);
 }
 
+// ===== ADD =====
 function addAsset(){
-  const name = document.getElementById("name").value;
-  const serial = document.getElementById("serial").value;
-  const status = document.getElementById("status").value;
-
-  if(!name || !serial){
-    alert("Enter data");
-    return;
-  }
-
-  assets.push({
+  const a={
     id:"AST-"+Date.now(),
-    name,
-    serial,
-    status
-  });
+    name:name.value,
+    serial:serial.value,
+    dept:dept.value,
+    custodian:custodian.value,
+    value:value.value,
+    date:date.value,
+    status:status.value,
+    notes:notes.value
+  };
 
+  assets.push(a);
   save();
-  renderAssets();
+  assetsPage();
 }
 
-function renderList(){
-  const list = document.getElementById("list");
+// ===== LIST =====
+function renderList(data){
+  const list=document.getElementById("list");
   list.innerHTML="";
 
-  assets.forEach(a=>{
-    list.innerHTML += `
-      <div>
-        ${a.name} - ${a.serial}
-        <span class="badge ${a.status==='active'?'active':'maint'}">${a.status}</span>
-        <button onclick="del('${a.id}')">❌</button>
-      </div>
-    `;
+  data.forEach(a=>{
+    list.innerHTML+=`
+    <tr>
+      <td>${a.id}</td>
+      <td>${a.name}</td>
+      <td>${a.dept}</td>
+      <td>${a.custodian}</td>
+      <td><span class="badge ${a.status.toLowerCase()}">${a.status}</span></td>
+      <td><button onclick="del('${a.id}')">❌</button></td>
+    </tr>`;
   });
 }
 
+// ===== SEARCH =====
+function search(q){
+  const filtered = assets.filter(a =>
+    a.name.toLowerCase().includes(q.toLowerCase()) ||
+    a.serial.toLowerCase().includes(q.toLowerCase())
+  );
+  renderList(filtered);
+}
+
+// ===== DELETE =====
 function del(id){
   assets = assets.filter(a=>a.id!==id);
   save();
-  renderAssets();
+  assetsPage();
 }
 
-// ================= SCANNER =================
-function renderScanner(){
+// ===== SCANNER =====
+function scannerPage(){
   document.getElementById("app").innerHTML = `
     <div class="card">
-      <h3>Scanner</h3>
       <div id="reader" style="width:300px"></div>
       <button onclick="startScan()">Start Scan</button>
     </div>
-
-    <div class="card">
-      <h3>Result</h3>
-      <div id="result">---</div>
-    </div>
+    <div class="card" id="result">Scan Result</div>
   `;
 }
 
@@ -143,32 +172,21 @@ function startScan(){
   const scanner = new Html5Qrcode("reader");
 
   scanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    (decodedText) => {
-      search(decodedText);
+    { facingMode:"environment" },
+    { fps:10, qrbox:250 },
+    (text)=>{
+      const a = assets.find(x=>x.id===text || x.serial===text);
+
+      document.getElementById("result").innerHTML = a ?
+        `✅ ${a.name} - ${a.custodian}` :
+        "❌ Not Found";
+
       scanner.stop();
     }
   );
 }
 
-function search(code){
-  const a = assets.find(x=>x.id===code || x.serial===code);
-
-  const result = document.getElementById("result");
-
-  if(a){
-    result.innerHTML = `
-      ✅ Found <br>
-      ${a.name} <br>
-      ${a.serial}
-    `;
-  }else{
-    result.innerHTML = "❌ Not Found";
-  }
-}
-
-// ================= INIT =================
+// ===== INIT =====
 go('dashboard');
 
 </script>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bevatel — Asset Management System</title>
+<style>
+  /* ===== RESET & ROOT ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bv: #0a2540;
+    --bv2: #1a4a7a;
+    --bvac: #00b4d8;
+    --bg: #ffffff;
+    --bg2: #f5f7fa;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --text: #111827;
+    --muted: #6b7280;
+    --success-bg: #dcfce7; --success-txt: #166534;
+    --warn-bg: #fef9c3;    --warn-txt: #854d0e;
+    --danger-bg: #fee2e2;  --danger-txt: #991b1b;
+    --info-bg: #dbeafe;    --info-txt: #1e40af;
+    --r: 12px; --rm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111827; --bg2: #1f2937;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --text: #f9fafb; --muted: #9ca3af;
+      --success-bg:#052e16;--success-txt:#86efac;
+      --warn-bg:#422006;  --warn-txt:#fde68a;
+      --danger-bg:#450a0a;--danger-txt:#fca5a5;
+      --info-bg:#1e3a5f;  --info-txt:#93c5fd;
+    }
+  }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: var(--text); background: var(--bg2); font-size: 14px; min-height: 100vh; }
+
+  /* ===== TOPBAR ===== */
+  .topbar { background: var(--bv); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .logo-wrap { display: flex; align-items: center; gap: 12px; }
+  .logo-box { background: var(--bvac); border-radius: 8px; padding: 5px 12px; font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+  .topbar-title { color: #fff; font-size: 15px; font-weight: 600; }
+  .topbar-sub { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 1px; }
+  .topbar-date { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+  /* ===== NAVIGATION ===== */
+  .nav { background: var(--bg); border-bottom: 0.5px solid var(--border); display: flex; gap: 4px; padding: 10px 16px; overflow-x: auto; }
+  .nav button { border: none; background: transparent; padding: 8px 16px; border-radius: var(--rm); cursor: pointer; font-size: 13px; color: var(--muted); white-space: nowrap; transition: all .15s; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+  .nav button.active { background: var(--bv); color: #fff; }
+  .nav button:hover:not(.active) { background: var(--bg2); color: var(--text); }
+
+  /* ===== CONTENT ===== */
+  .content { padding: 20px; }
+
+  /* ===== METRIC CARDS ===== */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .metric { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--rm); padding: 16px; text-align: center; }
+  .metric .val { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .metric .lbl { font-size: 11px; color: var(--muted); }
+  .metric.blue .val  { color: var(--bv2); }
+  .metric.cyan .val  { color: #0891b2; }
+  .metric.green .val { color: var(--success-txt); }
+  .metric.amber .val { color: var(--warn-txt); }
+
+  /* ===== CARDS ===== */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r); padding: 18px; }
+  .card h3 { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .6px; }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media(max-width:640px){ .dash-grid { grid-template-columns: 1fr; } }
+
+  /* ===== RECENT ITEMS ===== */
+  .ri { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+  .ri:last-child { border-bottom: none; }
+  .ai { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .ai.it   { background: var(--info-bg); color: var(--info-txt); }
+  .ai.desk { background: var(--warn-bg); color: var(--warn-txt); }
+  .ai.head { background: var(--success-bg); color: var(--success-txt); }
+  .ri-info { flex: 1; overflow: hidden; }
+  .ri-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ri-sub  { font-size: 11px; color: var(--muted); }
+
+  /* ===== BADGES ===== */
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .b-active  { background: var(--success-bg); color: var(--success-txt); }
+  .b-maint   { background: var(--warn-bg);    color: var(--warn-txt); }
+  .b-stored  { background: var(--bg2); color: var(--muted); border: 0.5px solid var(--border2); }
+  .b-retired { background: var(--danger-bg);  color: var(--danger-txt); }
+
+  /* ===== BAR ROWS ===== */
+  .bar-row   { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bar-lbl   { font-size: 12px; color: var(--muted); width: 80px; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 4px; transition: width .4s; }
+  .bar-cnt   { font-size: 12px; font-weight: 600; min-width: 20px; }
+
+  /* ===== TOOLBAR ===== */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--rm); padding: 8px 12px; font-size: 13px; color: var(--text); outline: none; font-family: inherit; }
+  .toolbar input { flex: 1; min-width: 160px; }
+  .toolbar select:focus, .toolbar input:focus { border-color: var(--bvac); }
+
+  /* ===== BUTTONS ===== */
+  .btn { border: 0.5px solid var(--border2); background: var(--bg); padding: 8px 14px; border-radius: var(--rm); cursor: pointer; font-size: 13px; color: var(--text); display: inline-flex; align-items: center; gap: 6px; transition: all .15s; white-space: nowrap; font-family: inherit; }
+  .btn:hover { background: var(--bg2); }
+  .btn.primary { background: var(--bv); color: #fff; border-color: var(--bv); }
+  .btn.primary:hover { background: var(--bv2); border-color: var(--bv2); }
+
+  /* ===== TABLE ===== */
+  .table-wrap { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r); overflow: hidden; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 650px; }
+  thead tr { background: var(--bg2); }
+  th { text-align: right; padding: 10px 12px; font-weight: 600; color: var(--muted); font-size: 11px; border-bottom: 0.5px solid var(--border); white-space: nowrap; text-transform: uppercase; letter-spacing: .4px; }
+  td { padding: 9px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+  .tbl-id   { font-size: 11px; color: var(--muted); font-family: monospace; }
+  .tbl-name { font-weight: 500; }
+  .tbl-sn   { font-size: 11px; color: var(--muted); font-family: monospace; }
+  .ibt { width: 28px; height: 28px; border-radius: 6px; border: 0.5px solid var(--border); background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); transition: all .15s; }
+  .ibt:hover { background: var(--bg2); color: var(--text); }
+  .ab { display: flex; gap: 4px; justify-content: flex-end; }
+
+  /* ===== SCANNER ===== */
+  .scanner-area { max-width: 480px; margin: 0 auto; }
+  .scan-box { background: var(--bg); border: 2px dashed var(--border2); border-radius: var(--r); padding: 36px; text-align: center; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .scan-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--bvac); opacity: .75; animation: scanline 2.2s ease-in-out infinite; top: 20%; }
+  @keyframes scanline { 0%{top:15%;opacity:0} 20%{opacity:.75} 80%{opacity:.75} 100%{top:85%;opacity:0} }
+  .scan-icon-box { width: 52px; height: 52px; background: var(--info-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 26px; }
+  .scan-hint { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .manual-input { display: flex; gap: 8px; margin-bottom: 14px; }
+  .manual-input input { flex: 1; background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--rm); padding: 9px 12px; font-size: 13px; color: var(--text); outline: none; direction: ltr; font-family: monospace; }
+  .manual-input input:focus { border-color: var(--bvac); }
+  .scan-result { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r); padding: 18px; display: none; }
+  .scan-result.show { display: block; }
+  .rrow { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .rrow:last-child { border-bottom: none; }
+  .rrow .k { color: var(--muted); }
+  .rrow .v { font-weight: 500; }
+  .bc-strip { font-family: monospace; font-size: 22px; letter-spacing: 4px; color: var(--bv); background: var(--bg2); border-radius: 8px; padding: 10px 20px; display: inline-block; margin: 12px 0; border: 0.5px solid var(--border); }
+
+  /* ===== REPORTS ===== */
+  .report-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .rc { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--r); padding: 18px; cursor: pointer; transition: all .15s; text-align: center; }
+  .rc:hover { border-color: var(--bvac); box-shadow: 0 0 0 1px var(--bvac); }
+  .rc .ri2 { font-size: 28px; margin-bottom: 8px; }
+  .rc .rt  { font-size: 13px; font-weight: 600; }
+  .rc .rd  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* ===== MAINTENANCE ===== */
+  .maint-item { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--rm); padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .ms-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .ms-dot.due      { background: #ef4444; }
+  .ms-dot.upcoming { background: #f59e0b; }
+  .ms-dot.done     { background: #22c55e; }
+  .mi   { flex: 1; }
+  .mt   { font-size: 13px; font-weight: 500; }
+  .ms2  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .md   { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--r); padding: 24px; width: 100%; max-width: 520px; }
+  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ff { display: flex; flex-direction: column; gap: 5px; }
+  .ff.full { grid-column: 1 / -1; }
+  .ff label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  .ff input, .ff select, .ff textarea { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--rm); padding: 8px 10px; font-size: 13px; color: var(--text); outline: none; font-family: inherit; }
+  .ff input:focus, .ff select:focus, .ff textarea:focus { border-color: var(--bvac); background: var(--bg); }
+  .ff textarea { resize: vertical; min-height: 64px; }
+  .fa { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .xbtn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--muted); line-height: 1; padding: 2px; }
+  .xbtn:hover { color: var(--text); }
+
+  /* ===== MISC ===== */
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+  .page-count { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+  .scan-actions { display: flex; gap: 8px; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-box">Bevatel</div>
+    <div>
+      <div class="topbar-title">Asset Management System</div>
+      <div class="topbar-sub">نظام إدارة الأصول</div>
+    </div>
+  </div>
+  <div class="topbar-date" id="top-date"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="active" onclick="go('dashboard')">📊 Dashboard</button>
+  <button onclick="go('assets')">🗂 الأصول</button>
+  <button onclick="go('scanner')">📷 Scanner</button>
+  <button onclick="go('maintenance')">🔧 الصيانة</button>
+  <button onclick="go('reports')">📈 التقارير</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content" id="mc"></div>
+
+<!-- ADD ASSET MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>إضافة أصل جديد <button class="xbtn" onclick="cm()">✕</button></h2>
+    <div class="fg">
+      <div class="ff full">
+        <label>اسم الأصل</label>
+        <input id="fn" type="text" placeholder="مثال: Dell Latitude 5540">
+      </div>
+      <div class="ff">
+        <label>الفئة</label>
+        <select id="fc">
+          <option>لاب توب</option>
+          <option>PC (كمبيوتر مكتبي)</option>
+          <option>مكتب</option>
+          <option>سماعات</option>
+        </select>
+      </div>
+      <div class="ff">
+        <label>القسم</label>
+        <select id="fd">
+          <option>تقنية المعلومات</option>
+          <option>المبيعات</option>
+          <option>خدمة العملاء</option>
+          <option>الإدارة</option>
+          <option>الموارد البشرية</option>
+          <option>المالية</option>
+        </select>
+      </div>
+      <div class="ff">
+        <label>المسؤول (Custodian)</label>
+        <input id="fu" type="text" placeholder="اسم الموظف">
+      </div>
+      <div class="ff">
+        <label>تاريخ الاستلام</label>
+        <input id="fdt" type="date">
+      </div>
+      <div class="ff">
+        <label>القيمة (ر.س)</label>
+        <input id="fv" type="number" placeholder="0" min="0">
+      </div>
+      <div class="ff">
+        <label>Serial Number</label>
+        <input id="fs" type="text" placeholder="SN-XXXXXXX" style="direction:ltr;font-family:monospace">
+      </div>
+      <div class="ff">
+        <label>الحالة</label>
+        <select id="fst">
+          <option>نشط</option>
+          <option>صيانة</option>
+          <option>مخزن</option>
+          <option>مُستبعد</option>
+        </select>
+      </div>
+      <div class="ff full">
+        <label>ملاحظات</label>
+        <textarea id="fno" placeholder="أي تفاصيل إضافية..."></textarea>
+      </div>
+    </div>
+    <div class="fa">
+      <button class="btn" onclick="cm()">إلغاء</button>
+      <button class="btn primary" onclick="saveA()">💾 حفظ الأصل</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const ICONS = {
+  'لاب توب': '💻',
+  'PC (كمبيوتر مكتبي)': '🖥',
+  'مكتب': '🪑',
+  'سماعات': '🎧'
+};
+const CCLS = {
+  'لاب توب': 'it',
+  'PC (كمبيوتر مكتبي)': 'it',
+  'مكتب': 'desk',
+  'سماعات': 'head'
+};
+
+let assets = [
+  { id:'BVT-001', name:'Dell Latitude 5540',      cat:'لاب توب',              dept:'تقنية المعلومات', user:'أحمد خالد',    status:'نشط',    date:'2024-01-10', val:4500, serial:'SN-DL5540-01',  notes:'' },
+  { id:'BVT-002', name:'HP EliteDesk 800',         cat:'PC (كمبيوتر مكتبي)',  dept:'خدمة العملاء',   user:'سارة محمد',    status:'نشط',    date:'2024-02-05', val:3200, serial:'SN-HP800-01',   notes:'' },
+  { id:'BVT-003', name:'مكتب L-Shape فاخر',        cat:'مكتب',                dept:'الإدارة',         user:'المدير العام', status:'نشط',    date:'2023-09-01', val:1800, serial:'SN-DSK-001',    notes:'' },
+  { id:'BVT-004', name:'Jabra Evolve2 85',          cat:'سماعات',              dept:'خدمة العملاء',   user:'محمد السيد',   status:'نشط',    date:'2024-03-12', val:980,  serial:'SN-JBR-001',    notes:'' },
+  { id:'BVT-005', name:'Lenovo ThinkPad X1',        cat:'لاب توب',             dept:'المبيعات',        user:'نورة علي',     status:'صيانة',  date:'2024-01-20', val:5200, serial:'SN-LNV-X1-01',  notes:'بطارية ضعيفة' },
+  { id:'BVT-006', name:'Plantronics Blackwire 3325',cat:'سماعات',              dept:'المبيعات',        user:'خالد رضا',     status:'نشط',    date:'2024-04-01', val:450,  serial:'SN-PLT-001',    notes:'' },
+  { id:'BVT-007', name:'مكتب موظف قياسي',          cat:'مكتب',                dept:'المالية',         user:'ريم أحمد',     status:'نشط',    date:'2023-09-01', val:900,  serial:'SN-DSK-002',    notes:'' },
+  { id:'BVT-008', name:'Dell OptiPlex 7090',        cat:'PC (كمبيوتر مكتبي)', dept:'الموارد البشرية', user:'فيصل عمر',     status:'نشط',    date:'2024-02-18', val:2800, serial:'SN-DL7090-01',  notes:'' },
+];
+
+let maintenance = [
+  { id:'M-001', asset:'BVT-005', assetName:'Lenovo ThinkPad X1',    type:'استبدال بطارية', date:'2025-05-15', status:'due',      notes:'بطارية ضعيفة' },
+  { id:'M-002', asset:'BVT-001', assetName:'Dell Latitude 5540',     type:'تحديث ويندوز',   date:'2025-06-10', status:'upcoming', notes:'' },
+  { id:'M-003', asset:'BVT-002', assetName:'HP EliteDesk 800',       type:'تنظيف دوري',     date:'2025-07-20', status:'upcoming', notes:'' },
+];
+
+// ===== INIT =====
+document.getElementById('top-date').textContent =
+  new Date().toLocaleDateString('ar-SA', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+
+// ===== NAVIGATION =====
+function go(t) {
+  document.querySelectorAll('.nav button').forEach((b, i) => {
+    b.classList.toggle('active', ['dashboard','assets','scanner','maintenance','reports'][i] === t);
+  });
+  const mc = document.getElementById('mc');
+  if      (t === 'dashboard')   mc.innerHTML = dash();
+  else if (t === 'assets')      mc.innerHTML = assetTab();
+  else if (t === 'scanner')     mc.innerHTML = scanTab();
+  else if (t === 'maintenance') mc.innerHTML = maintTab();
+  else if (t === 'reports')     mc.innerHTML = reportsTab();
+}
+
+// ===== DASHBOARD =====
+function dash() {
+  const tot = assets.length;
+  const act = assets.filter(a => a.status === 'نشط').length;
+  const mnt = assets.filter(a => a.status === 'صيانة').length;
+  const tv  = assets.reduce((s, a) => s + a.val, 0);
+  const bycat = assets.reduce((acc, a) => { acc[a.cat] = (acc[a.cat]||0)+1; return acc; }, {});
+  const bydept= assets.reduce((acc, a) => { acc[a.dept]=(acc[a.dept]||0)+1; return acc; }, {});
+  const recent = [...assets].reverse().slice(0, 5);
+
+  return `
+  <div class="metrics">
+    <div class="metric blue">  <div class="val">${tot}</div>   <div class="lbl">إجمالي الأصول</div></div>
+    <div class="metric green"> <div class="val">${act}</div>   <div class="lbl">نشطة</div></div>
+    <div class="metric amber"> <div class="val">${mnt}</div>   <div class="lbl">في الصيانة</div></div>
+    <div class="metric cyan">  <div class="val">${tv.toLocaleString()} <span style="font-size:14px">ر.س</span></div><div class="lbl">إجمالي القيمة</div></div>
+  </div>
+  <div class="dash-grid">
+    <div class="card">
+      <h3>آخر الأصول المضافة</h3>
+      ${recent.map(a => `
+      <div class="ri">
+        <div class="ai ${CCLS[a.cat]||'it'}">${ICONS[a.cat]||'📦'}</div>
+        <div class="ri-info">
+          <div class="ri-name">${a.name}</div>
+          <div class="ri-sub">${a.dept} · ${a.user}</div>
+        </div>
+        <span class="badge ${a.status==='نشط'?'b-active':a.status==='صيانة'?'b-maint':'b-stored'}">${a.status}</span>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <h3>توزيع الأصول بالفئة</h3>
+      ${Object.entries(bycat).map(([k,n]) => `
+      <div class="bar-row">
+        <span class="bar-lbl">${ICONS[k]||''} ${k.split(' ')[0]}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/tot*100)}%;background:var(--bvac)"></div></div>
+        <span class="bar-cnt">${n}</span>
+      </div>`).join('')}
+      <div style="border-top:0.5px solid var(--border);margin:14px 0 10px"></div>
+      <h3>توزيع الأصول بالقسم</h3>
+      ${Object.entries(bydept).map(([d,n]) => `
+      <div class="bar-row">
+        <span class="bar-lbl" style="font-size:11px">${d}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/tot*100)}%;background:#0a2540"></div></div>
+        <span class="bar-cnt">${n}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ===== ASSETS TABLE =====
+function assetTab(q='', cf='all') {
+  let f = assets.filter(a => {
+    const s = q.toLowerCase();
+    const match = a.name.includes(s)||a.id.toLowerCase().includes(s)||a.user.includes(s)||a.dept.includes(s)||a.serial.toLowerCase().includes(s);
+    const catOk = cf==='all' || a.cat===cf;
+    return match && catOk;
+  });
+  return `
+  <div class="toolbar">
+    <input id="sb" placeholder="🔍 بحث بالاسم، الكود، السيريال، الموظف..." oninput="filterA(this.value)" value="${q}">
+    <select onchange="filterA(document.getElementById('sb').value, this.value)">
+      <option value="all">كل الفئات</option>
+      <option value="لاب توب">💻 لاب توب</option>
+      <option value="PC (كمبيوتر مكتبي)">🖥 PC</option>
+      <option value="مكتب">🪑 مكاتب</option>
+      <option value="سماعات">🎧 سماعات</option>
+    </select>
+    <button class="btn primary" onclick="om()">＋ أصل جديد</button>
+    <button class="btn" onclick="expCSV()">⬇ تصدير CSV</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الكود</th>
+          <th>الأصل</th>
+          <th>الفئة</th>
+          <th>القسم</th>
+          <th>المسؤول</th>
+          <th>القيمة (ر.س)</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${f.length === 0
+          ? `<tr><td colspan="8"><div class="empty">🔍 لا توجد نتائج</div></td></tr>`
+          : f.map(a => `
+        <tr>
+          <td><span class="tbl-id">${a.id}</span></td>
+          <td>
+            <div class="tbl-name">${ICONS[a.cat]||'📦'} ${a.name}</div>
+            <div class="tbl-sn">${a.serial}</div>
+          </td>
+          <td>${a.cat}</td>
+          <td>${a.dept}</td>
+          <td>${a.user}</td>
+          <td style="font-weight:600">${a.val.toLocaleString()}</td>
+          <td><span class="badge ${a.status==='نشط'?'b-active':a.status==='صيانة'?'b-maint':a.status==='مُستبعد'?'b-retired':'b-stored'}">${a.status}</span></td>
+          <td>
+            <div class="ab">
+              <button class="ibt" onclick="scanById('${a.id}')" title="عرض باركود">📊</button>
+              <button class="ibt" onclick="editStatus('${a.id}')" title="تغيير الحالة">✏️</button>
+              <button class="ibt" onclick="delA('${a.id}')" title="حذف">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div class="page-count">إجمالي النتائج: ${f.length} أصل</div>`;
+}
+
+function filterA(q, cf='all') {
+  document.getElementById('mc').innerHTML = assetTab(q, cf);
+  const sb = document.getElementById('sb');
+  if (sb) { sb.focus(); sb.setSelectionRange(sb.value.length, sb.value.length); }
+}
+
+function editStatus(id) {
+  const a = assets.find(x => x.id === id);
+  if (!a) return;
+  const opts = ['نشط','صيانة','مخزن','مُستبعد'];
+  const choice = prompt(`الحالة الحالية: ${a.status}\nاختر الحالة الجديدة:\n1. نشط\n2. صيانة\n3. مخزن\n4. مُستبعد\n\nاكتب الرقم:`, '1');
+  const idx = parseInt(choice) - 1;
+  if (idx >= 0 && idx < opts.length) { a.status = opts[idx]; go('assets'); }
+}
+
+// ===== SCANNER =====
+function scanTab() {
+  return `
+  <div class="scanner-area">
+    <div class="scan-box">
+      <div class="scan-line"></div>
+      <div class="scan-icon-box">📷</div>
+      <p class="scan-hint">أدخل الـ Asset ID أو الـ Serial Number لعرض بيانات الأصل</p>
+      <button class="btn primary" onclick="simScan()">محاكاة Barcode Scan عشوائي</button>
+    </div>
+    <div class="manual-input">
+      <input id="bi" type="text" placeholder="BVT-001  أو  SN-DL5540-01"
+        onkeydown="if(event.key==='Enter') lookup(this.value)">
+      <button class="btn primary" onclick="lookup(document.getElementById('bi').value)">بحث</button>
+    </div>
+    <div class="scan-result" id="sr"></div>
+  </div>`;
+}
+
+function lookup(q) {
+  q = q.trim();
+  if (!q) return;
+  const a = assets.find(x =>
+    x.id === q.toUpperCase() ||
+    x.serial.toLowerCase() === q.toLowerCase()
+  );
+  const r = document.getElementById('sr');
+  if (!r) return;
+  if (a) {
+    showSR(a);
+  } else {
+    r.className = 'scan-result show';
+    r.innerHTML = `<div style="color:#ef4444;text-align:center;padding:20px;font-size:14px">
+      ❌ لا يوجد أصل بهذا الكود أو السيريال: <strong>${q}</strong>
+    </div>`;
+  }
+}
+
+function simScan() {
+  const a = assets[Math.floor(Math.random() * assets.length)];
+  const bi = document.getElementById('bi');
+  if (bi) bi.value = a.id;
+  lookup(a.id);
+}
+
+function scanById(id) {
+  go('scanner');
+  setTimeout(() => lookup(id), 60);
+}
+
+function showSR(a) {
+  const r = document.getElementById('sr');
+  if (!r) return;
+  r.className = 'scan-result show';
+  r.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:14px;font-weight:600">
+      ✅ تم العثور على الأصل
+      <span class="badge ${a.status==='نشط'?'b-active':a.status==='صيانة'?'b-maint':'b-stored'}">${a.status}</span>
+    </div>
+    <div style="text-align:center"><div class="bc-strip">${a.id}</div></div>
+    <div class="rrow"><span class="k">الاسم</span>      <span class="v">${a.name}</span></div>
+    <div class="rrow"><span class="k">الفئة</span>      <span class="v">${ICONS[a.cat]} ${a.cat}</span></div>
+    <div class="rrow"><span class="k">القسم</span>      <span class="v">${a.dept}</span></div>
+    <div class="rrow"><span class="k">المسؤول</span>    <span class="v">${a.user}</span></div>
+    <div class="rrow"><span class="k">تاريخ الاستلام</span><span class="v">${new Date(a.date).toLocaleDateString('ar-SA')}</span></div>
+    <div class="rrow"><span class="k">Serial Number</span><span class="v" style="direction:ltr;font-family:monospace">${a.serial}</span></div>
+    <div class="rrow"><span class="k">القيمة</span>     <span class="v">${a.val.toLocaleString()} ر.س</span></div>
+    ${a.notes ? `<div class="rrow"><span class="k">ملاحظات</span><span class="v">${a.notes}</span></div>` : ''}
+    <div class="scan-actions">
+      <button class="btn" onclick="go('assets')">عرض في القائمة</button>
+      <button class="btn primary" onclick="printBC('${a.id}')">🖨 طباعة باركود</button>
+    </div>`;
+}
+
+function printBC(id) {
+  const a = assets.find(x => x.id === id);
+  if (!a) return;
+  const w = window.open('', '_blank', 'width=400,height=300');
+  if (!w) { alert('السماح بالـ popups لتشغيل الطباعة'); return; }
+  w.document.write(`<!DOCTYPE html><html dir="ltr"><head>
+  <meta charset="UTF-8">
+  <title>Barcode - ${a.id}</title>
+  <style>
+    body{font-family:monospace;text-align:center;padding:28px;background:#fff;color:#000}
+    .co{font-size:14px;font-weight:bold;margin-bottom:2px}
+    .nm{font-size:12px;color:#555;margin-bottom:12px}
+    .bc{font-size:50px;letter-spacing:5px;margin:6px 0;color:#0a2540}
+    .id{font-size:18px;font-weight:bold;letter-spacing:3px;margin-bottom:4px}
+    .inf{font-size:10px;color:#888}
+    button{margin-top:16px;padding:8px 22px;cursor:pointer;font-size:13px;background:#0a2540;color:#fff;border:none;border-radius:6px}
+  </style></head><body>
+  <div class="co">Bevatel</div>
+  <div class="nm">${a.name}</div>
+  <div class="bc">|||||${a.id.replace('-','')}|||||</div>
+  <div class="id">${a.id}</div>
+  <div class="inf">${a.dept} &nbsp;·&nbsp; ${a.serial}</div>
+  <br><button onclick="window.print()">🖨 Print</button>
+  </body></html>`);
+}
+
+// ===== MAINTENANCE =====
+function maintTab() {
+  const statusLabel = { due: '⚠ متأخرة', upcoming: 'مجدولة', done: 'مكتملة' };
+  return `
+  <div class="toolbar">
+    <button class="btn primary" onclick="addMaint()">＋ جدولة صيانة جديدة</button>
+  </div>
+  ${maintenance.length === 0
+    ? '<div class="empty">✅ لا توجد مهام صيانة حالياً</div>'
+    : maintenance.map(m => `
+  <div class="maint-item">
+    <div class="ms-dot ${m.status}"></div>
+    <div class="mi">
+      <div class="mt">${m.type} &nbsp;—&nbsp; ${m.assetName}</div>
+      <div class="ms2">${m.id} · ${statusLabel[m.status]||m.status}${m.notes?' · '+m.notes:''}</div>
+    </div>
+    <div class="md">${new Date(m.date).toLocaleDateString('ar-SA')}</div>
+    <button class="btn" style="margin-right:10px" onclick="doneMaint('${m.id}')">✓ تم</button>
+  </div>`).join('')}`;
+}
+
+function addMaint() {
+  const aid = prompt('أدخل Asset ID (مثال: BVT-001):');
+  if (!aid) return;
+  const a = assets.find(x => x.id === aid.toUpperCase().trim());
+  if (!a) { alert('الأصل غير موجود. تحقق من الكود.'); return; }
+  const tp = prompt('نوع الصيانة:', 'صيانة دورية');
+  if (!tp) return;
+  const dt = prompt('تاريخ الصيانة (YYYY-MM-DD):', new Date().toISOString().slice(0,10));
+  const nt = prompt('ملاحظات (اختياري):', '');
+  maintenance.push({
+    id: 'M-' + String(maintenance.length+1).padStart(3,'0'),
+    asset: a.id, assetName: a.name,
+    type: tp, date: dt || new Date().toISOString().slice(0,10),
+    status: 'upcoming', notes: nt || ''
+  });
+  go('maintenance');
+}
+
+function doneMaint(id) {
+  if (confirm('تأكيد إتمام مهمة الصيانة ' + id + '؟')) {
+    maintenance = maintenance.filter(m => m.id !== id);
+    go('maintenance');
+  }
+}
+
+// ===== REPORTS =====
+function reportsTab() {
+  return `
+  <div class="report-cards">
+    <div class="rc" onclick="runRep('inv')">
+      <div class="ri2">📋</div>
+      <div class="rt">جرد كامل</div>
+      <div class="rd">كل الأصول وحالتها</div>
+    </div>
+    <div class="rc" onclick="runRep('cust')">
+      <div class="ri2">👤</div>
+      <div class="rt">تقرير الحيازة</div>
+      <div class="rd">من يحمل أي أصل</div>
+    </div>
+    <div class="rc" onclick="runRep('val')">
+      <div class="ri2">💰</div>
+      <div class="rt">القيمة بالقسم</div>
+      <div class="rd">توزيع الميزانية</div>
+    </div>
+    <div class="rc" onclick="runRep('cat')">
+      <div class="ri2">📊</div>
+      <div class="rt">تقرير الفئات</div>
+      <div class="rd">لاب توب / PC / مكاتب / سماعات</div>
+    </div>
+  </div>
+  <div id="ro"></div>`;
+}
+
+function runRep(t) {
+  const el = document.getElementById('ro');
+  if (!el) return;
+  const tot = assets.reduce((s,a) => s + a.val, 0);
+
+  if (t === 'inv') {
+    el.innerHTML = `<div class="card">
+      <h3>جرد كامل — ${assets.length} أصل | الإجمالي: ${tot.toLocaleString()} ر.س</h3>
+      <div style="overflow-x:auto"><table style="min-width:auto">
+        <thead><tr><th>الكود</th><th>الاسم</th><th>الفئة</th><th>القسم</th><th>المسؤول</th><th>القيمة</th><th>الحالة</th></tr></thead>
+        <tbody>${assets.map(a=>`<tr>
+          <td><span class="tbl-id">${a.id}</span></td>
+          <td>${ICONS[a.cat]} ${a.name}</td><td>${a.cat}</td><td>${a.dept}</td><td>${a.user}</td>
+          <td style="font-weight:600">${a.val.toLocaleString()} ر.س</td>
+          <td><span class="badge ${a.status==='نشط'?'b-active':'b-maint'}">${a.status}</span></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+      <div style="text-align:left;margin-top:12px">
+        <button class="btn" onclick="expCSV()">⬇ تصدير CSV</button>
+      </div>
+    </div>`;
+
+  } else if (t === 'cust') {
+    const bu = assets.reduce((acc,a) => { if(!acc[a.user])acc[a.user]=[]; acc[a.user].push(a); return acc; }, {});
+    el.innerHTML = `<div class="card"><h3>تقرير الحيازة</h3>${Object.entries(bu).map(([u,as]) => `
+      <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--border)">
+        <div style="font-weight:600;margin-bottom:8px;font-size:13px">${u} &nbsp;·&nbsp; ${as.length} أصل &nbsp;·&nbsp; ${as.reduce((s,x)=>s+x.val,0).toLocaleString()} ر.س</div>
+        ${as.map(a=>`<div class="ri">
+          <div class="ai ${CCLS[a.cat]||'it'}">${ICONS[a.cat]}</div>
+          <div class="ri-info"><div class="ri-name">${a.name}</div><div class="ri-sub">${a.id} · ${a.serial}</div></div>
+          <span style="font-size:12px;font-weight:600">${a.val.toLocaleString()} ر.س</span>
+        </div>`).join('')}
+      </div>`).join('')}
+    </div>`;
+
+  } else if (t === 'val') {
+    const bd = assets.reduce((acc,a) => { acc[a.dept]=(acc[a.dept]||0)+a.val; return acc; }, {});
+    el.innerHTML = `<div class="card"><h3>القيمة بالقسم</h3>
+      ${Object.entries(bd).sort((a,b)=>b[1]-a[1]).map(([d,v]) => `
+      <div class="bar-row">
+        <span class="bar-lbl" style="width:120px;font-size:12px">${d}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/tot*100)}%;background:var(--bvac)"></div></div>
+        <span class="bar-cnt" style="min-width:110px;font-size:12px">${v.toLocaleString()} ر.س</span>
+      </div>`).join('')}
+      <div style="margin-top:16px;font-weight:700;font-size:14px">الإجمالي الكلي: ${tot.toLocaleString()} ر.س</div>
+    </div>`;
+
+  } else {
+    const bc = assets.reduce((acc,a) => { acc[a.cat]=(acc[a.cat]||0)+1; return acc; }, {});
+    const bv = assets.reduce((acc,a) => { acc[a.cat]=(acc[a.cat]||0)+a.val; return acc; }, {});
+    el.innerHTML = `<div class="card"><h3>تقرير الفئات</h3>
+      <div style="overflow-x:auto"><table style="min-width:auto">
+        <thead><tr><th>الفئة</th><th>العدد</th><th>القيمة الكلية</th><th>متوسط القيمة</th></tr></thead>
+        <tbody>${Object.entries(bc).map(([c,n]) => `<tr>
+          <td>${ICONS[c]} ${c}</td>
+          <td style="font-weight:600">${n}</td>
+          <td style="font-weight:600">${(bv[c]||0).toLocaleString()} ر.س</td>
+          <td>${Math.round((bv[c]||0)/n).toLocaleString()} ر.س</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }
+}
+
+// ===== MODAL =====
+function om() {
+  document.getElementById('fdt').value = new Date().toISOString().slice(0,10);
+  ['fn','fu','fv','fs','fno'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('modal').classList.add('show');
+}
+function cm() { document.getElementById('modal').classList.remove('show'); }
+
+function saveA() {
+  const n = document.getElementById('fn').value.trim();
+  if (!n) { alert('يرجى إدخال اسم الأصل'); return; }
+  const nid = 'BVT-' + String(assets.length + 1).padStart(3,'0');
+  assets.push({
+    id: nid,
+    name: n,
+    cat:    document.getElementById('fc').value,
+    dept:   document.getElementById('fd').value,
+    user:   document.getElementById('fu').value || 'غير محدد',
+    status: document.getElementById('fst').value,
+    date:   document.getElementById('fdt').value,
+    val:    parseInt(document.getElementById('fv').value) || 0,
+    serial: document.getElementById('fs').value || 'SN-' + nid,
+    notes:  document.getElementById('fno').value,
+  });
+  cm();
+  go('assets');
+}
+
+// ===== UTILITIES =====
+function delA(id) {
+  if (confirm('هل تريد حذف الأصل ' + id + '؟ لا يمكن التراجع.')) {
+    assets = assets.filter(a => a.id !== id);
+    go('assets');
+  }
+}
+
+function expCSV() {
+  const header = ['Asset ID','الاسم','الفئة','القسم','المسؤول','القيمة (ر.س)','الحالة','Serial Number','تاريخ الاستلام','ملاحظات'];
+  const rows = assets.map(a => [a.id, a.name, a.cat, a.dept, a.user, a.val, a.status, a.serial, a.date, a.notes]);
+  const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'Bevatel_Assets_' + new Date().toISOString().slice(0,10) + '.csv';
+  link.click();
+}
+
+// ===== BOOT =====
+go('dashboard');
+</script>
+</body>
+</html>

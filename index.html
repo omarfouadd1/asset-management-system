@@ -1236,60 +1236,126 @@ function copyText(txt){
   navigator.clipboard.writeText(txt).then(()=>toast('تم النسخ.')).catch(()=>toast('تعذر النسخ.'));
 }
 
-function printAssetCard(id){
-  const a = assets.find(x=>x.id===id);
-  if(!a) return;
+function printAssetCard(id) {
+  const a = assets.find(x => x.id === id);
+  if (!a) return;
+
   const w = window.open('', '_blank', 'width=560,height=760');
-  if(!w){ toast('اسمح بفتح النوافذ للطباعة.'); return; }
+  if (!w) {
+    toast('اسمح بفتح النوافذ للطباعة.');
+    return;
+  }
 
-  w.document.write(`
-    <!DOCTYPE html>
-    <html dir="rtl">
-    <head>
-      <meta charset="UTF-8">
-      <title>${a.id}</title>
-      <style>
-        body{font-family:Segoe UI,Tahoma,Arial,sans-serif;padding:24px;background:#fff;color:#000}
-        .wrap{border:1px solid #ddd;border-radius:18px;padding:18px}
-        h1{margin:0 0 6px;font-size:20px}
-        .sub{color:#666;font-size:12px;margin-bottom:16px}
-        .row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #eee;font-size:13px}
-        .row:last-child{border-bottom:none}
-        .k{color:#666}
-        .v{font-weight:700}
-        .qr{display:flex;justify-content:center;margin:16px 0}
-        .bar{display:flex;justify-content:center;margin:14px 0}
-        button{margin-top:16px;padding:10px 18px;border:none;background:#0a2540;color:#fff;border-radius:10px;cursor:pointer}
-      </style>
-      <script src="https://unpkg.com/html5-qrcode"></script>
-      <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    </head>
-    <body>
-      <div class="wrap">
-        <h1>Bevatel</h1>
-        <div class="sub">Asset Management System</div>
-        <div class="bar"><svg id="pbc"></svg></div>
-        <div class="qr"><div id="pqr"></div></div>
-        <div class="row"><span class="k">الكود</span><span class="v">${escapeHtml(a.id)}</span></div>
-        <div class="row"><span class="k">الاسم</span><span class="v">${escapeHtml(a.name)}</span></div>
-        <div class="row"><span class="k">النوع</span><span class="v">${escapeHtml(a.category)}</span></div>
-        <div class="row"><span class="k">القسم</span><span class="v">${escapeHtml(a.dept)}</span></div>
-        <div class="row"><span class="k">المسؤول</span><span class="v">${escapeHtml(a.custodian)}</span></div>
-        <div class="row"><span class="k">الحالة</span><span class="v">${escapeHtml(a.status)}</span></div>
-        <div class="row"><span class="k">السيريال</span><span class="v">${escapeHtml(a.serial || '-')}</span></div>
-        <div class="row"><span class="k">القيمة</span><span class="v">${fmtMoney(a.value)}</span></div>
-        <button onclick="window.print()">Print</button>
-      </div>
+  w.document.open();
+  w.document.write(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(a.id)}</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body{
+      font-family:Segoe UI,Tahoma,Arial,sans-serif;
+      padding:24px;
+      background:#fff;
+      color:#111;
+      margin:0;
+    }
+    .wrap{
+      border:1px solid #ddd;
+      border-radius:18px;
+      padding:20px;
+      max-width:480px;
+      margin:0 auto;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size:22px;
+      color:#0a2540;
+    }
+    .sub{
+      color:#666;
+      font-size:12px;
+      margin-bottom:16px;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:8px 0;
+      border-bottom:1px solid #eee;
+      font-size:13px;
+    }
+    .row:last-child{border-bottom:none}
+    .k{color:#666}
+    .v{font-weight:700; text-align:left}
+    .qr{
+      display:flex;
+      justify-content:center;
+      margin:16px 0;
+    }
+    .bar{
+      display:flex;
+      justify-content:center;
+      margin:14px 0;
+    }
+    button{
+      margin-top:16px;
+      padding:10px 18px;
+      border:none;
+      background:#0a2540;
+      color:#fff;
+      border-radius:10px;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Bevatel</h1>
+    <div class="sub">Asset Management System</div>
 
-      <script>
-        JsBarcode('#pbc', '${a.id}', {format:'CODE128', lineColor:'#000', background:'#fff', width:1.4, height:60, displayValue:true, margin:0});
-        new QRCode(document.getElementById('pqr'), {text:'${a.id}', width:140, height:140, correctLevel:QRCode.CorrectLevel.M});
-      <\/script>
-    </body>
-    </html>
-  `);
+    <div class="bar"><svg id="pbc"></svg></div>
+    <div class="qr"><div id="pqr"></div></div>
+
+    <div class="row"><span class="k">الكود</span><span class="v">${escapeHtml(a.id)}</span></div>
+    <div class="row"><span class="k">الاسم</span><span class="v">${escapeHtml(a.name)}</span></div>
+    <div class="row"><span class="k">النوع</span><span class="v">${escapeHtml(a.category)}</span></div>
+    <div class="row"><span class="k">القسم</span><span class="v">${escapeHtml(a.dept)}</span></div>
+    <div class="row"><span class="k">المسؤول</span><span class="v">${escapeHtml(a.custodian)}</span></div>
+    <div class="row"><span class="k">الحالة</span><span class="v">${escapeHtml(a.status)}</span></div>
+    <div class="row"><span class="k">السيريال</span><span class="v">${escapeHtml(a.serial || '-')}</span></div>
+    <div class="row"><span class="k">القيمة</span><span class="v">${fmtMoney(a.value)}</span></div>
+
+    <button onclick="window.print()">Print</button>
+  </div>
+
+  <script>
+    JsBarcode('#pbc', '${escapeHtml(a.id)}', {
+      format: 'CODE128',
+      lineColor: '#000',
+      background: '#fff',
+      width: 1.4,
+      height: 60,
+      displayValue: true,
+      margin: 0
+    });
+
+    new QRCode(document.getElementById('pqr'), {
+      text: '${escapeHtml(a.id)}',
+      width: 140,
+      height: 140,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  <\/script>
+</body>
+</html>`);
   w.document.close();
+  w.focus();
 }
 
 /* ===========================

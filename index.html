@@ -470,6 +470,43 @@
   </style>
 </head>
 <body>
+  <div id="loginScreen" style="
+position:fixed;inset:0;
+background:#0a2540;
+display:flex;align-items:center;justify-content:center;
+z-index:9999;
+">
+
+  <div style="
+    background:#fff;
+    padding:30px;
+    border-radius:16px;
+    width:300px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.2)
+  ">
+    <h2 style="margin-bottom:20px">Login</h2>
+
+    <input id="loginUser" placeholder="Username"
+      style="width:100%;margin-bottom:10px;padding:10px;border:1px solid #ccc;border-radius:8px">
+
+    <input id="loginPass" type="password" placeholder="Password"
+      style="width:100%;margin-bottom:15px;padding:10px;border:1px solid #ccc;border-radius:8px">
+
+    <button onclick="doLogin()" style="
+      width:100%;
+      padding:10px;
+      background:#1d4ed8;
+      color:#fff;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+    ">
+      Login
+    </button>
+  </div>
+
+</div>
 <div class="layout">
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -520,6 +557,34 @@ function logout(){
   location.reload();
 }
 <script>
+  // ===== LOGIN SYSTEM =====
+function checkLogin(){
+  if(localStorage.getItem("auth")==="true"){
+    document.getElementById("loginScreen").style.display="none";
+  }else{
+    document.getElementById("loginScreen").style.display="flex";
+  }
+}
+
+function doLogin(){
+  const u = document.getElementById("loginUser").value;
+  const p = document.getElementById("loginPass").value;
+
+  if(u === "admin" && p === "1234"){
+    localStorage.setItem("auth","true");
+    checkLogin();
+  }else{
+    alert("Wrong credentials");
+  }
+}
+
+function logout(){
+  localStorage.removeItem("auth");
+  location.reload();
+}
+
+// شغّلها أول ما الصفحة تفتح
+window.addEventListener("load", checkLogin);
 /* ════════════════════════════════════════════════
    CONSTANTS & STATE
 ════════════════════════════════════════════════ */

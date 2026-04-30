@@ -506,6 +506,7 @@
         <button class="btn primary" onclick="openAssetForm()">＋ إضافة أصل</button>
         <button class="btn ghost" onclick="exportCSV()">⬇ CSV</button>
         <button class="btn ghost" onclick="exportJSON()">⬇ JSON</button>
+        <button class="btn danger" onclick="logout()">🚪 Logout</button>
       </div>
     </div>
     <section id="app" class="content"></section>
@@ -514,7 +515,10 @@
 
 <div id="modalRoot"></div>
 <div id="toast" class="toast"></div>
-
+function logout(){
+  localStorage.removeItem("auth");
+  location.reload();
+}
 <script>
 /* ════════════════════════════════════════════════
    CONSTANTS & STATE

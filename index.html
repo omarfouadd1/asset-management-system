@@ -1394,52 +1394,80 @@ function openDetails(code){
    PRINT LABEL
 ════════════════════════════════════════════════ */
 function printLabel(code){
-  const a=assets.find(x=>x.code===code);
-  if(!a) return;
-  const w=window.open('','_blank','width=420,height:360');
-  if(!w){ showToast('السماح بالـ popups للطباعة'); return; }
-  w.document.write(`<!DOCTYPE html><html dir="ltr"><head><meta charset="UTF-8">
-  <title>Label - ${a.code}</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
-  <style>
-    body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#fff;color:#000}
-    .label{width:350px;border:1px solid #ccc;border-radius:12px;padding:16px;text-align:center}
-    .co{font-size:16px;font-weight:800;color:#0a2540;margin-bottom:2px}
-    .nm{font-size:13px;color:#334155;margin-bottom:10px;font-weight:600}
-    .bc svg{width:100%;height:56px}
-    .id{font-size:14px;font-weight:800;font-family:monospace;letter-spacing:2px;margin:6px 0}
-    .info{font-size:11px;color:#64748b;margin-top:8px;line-height:1.7;text-align:right;direction:rtl}
-    canvas{margin-top:10px;border-radius:6px}
-    .row{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
-    .right{text-align:right;direction:rtl;flex:1}
-    button{margin-top:14px;padding:9px 22px;background:#0a2540;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px}
-  </style></head>
+
+  const w = window.open('', '_blank', 'width=260,height=180');
+  if(!w){
+    showToast('السماح بالـ popups للطباعة');
+    return;
+  }
+
+  w.document.write(`
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>${a.code}</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+
+    <style>
+      body{
+        margin:0;
+        padding:10px;
+        background:#ffffff;
+        font-family:Arial,sans-serif;
+      }
+
+      .label{
+        width:220px;
+        margin:auto;
+        text-align:center;
+      }
+
+      svg{
+        width:100%;
+        height:70px;
+      }
+
+      .text{
+        margin-top:4px;
+        font-size:14px;
+        font-weight:700;
+        color:#000;
+        letter-spacing:.3px;
+      }
+    </style>
+  </head>
+
   <body>
     <div class="label">
-      <div class="co">Bevatel Asset Hub</div>
-      <div class="nm">${a.name}</div>
-      <div class="row">
-        <div style="flex:1.5">
-          <div class="bc"><svg id="pbc"></svg></div>
-          <div class="id">${a.code}</div>
-        </div>
-        <div><canvas id="pqr"></canvas></div>
-      </div>
-      <div class="info">
-        <div>القسم: ${a.department}</div>
-        <div>المسؤول: ${a.custodian}</div>
-        <div>الموقع: ${a.location}</div>
-        <div>السيريال: ${a.serial||'-'}</div>
-        <div>الضمان: ${a.warrantyEnd||'-'}</div>
-      </div>
+      <svg id="barcode"></svg>
+      <div class="text">${a.code} / ${a.category}</div>
     </div>
-    <button onclick="window.print()">🖨️ طباعة</button>
+
     <script>
-      JsBarcode(document.getElementById('pbc'),'${a.code}',{format:'CODE128',lineColor:'#0f172a',background:'#fff',width:1.4,height:52,displayValue:false,margin:0});
-      QRCode.toCanvas(document.getElementById('pqr'),'${a.code}',{width:80,margin:1,color:{dark:'#0f172a',light:'#fff'}});
+      JsBarcode('#barcode', '${a.code}', {
+        format:'CODE128',
+        lineColor:'#000',
+        background:'#fff',
+        width:2,
+        height:55,
+        displayValue:false,
+        margin:0
+      });
+
+      window.onload = () => {
+        setTimeout(() => {
+          window.print();
+          window.close();
+        }, 300);
+      };
     <\/script>
-  </body></html>`);
+  </body>
+  </html>
+  `);
+
+  w.document.close();
 }
 
 /* ════════════════════════════════════════════════

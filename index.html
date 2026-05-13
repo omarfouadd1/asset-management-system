@@ -689,20 +689,7 @@ function showApp(){
 }
 
 /* Auth guard on page load */
-(function authInit(){
-  const session = loadSession();
-  if(session){
-    // Verify user still exists
-    const found = appUsers.find(u => u.id === session.id && u.username === session.username);
-    if(found){
-      currentUser = { id:found.id, username:found.username, role:found.role };
-      showApp();
-      return;
-    }
-  }
-  // Show login screen
-  document.getElementById('loginScreen').style.display = 'flex';
-})();
+
 
 /* ════════════════════════════════════════════════
    USER MANAGEMENT PAGE
@@ -897,6 +884,20 @@ const DEMO_MAINTENANCE = [
 let assets      = loadFromStorage(STORAGE_KEY, DEMO_ASSETS);
 let history     = loadFromStorage(HISTORY_KEY, []);
 let maintenance = loadFromStorage(MAINT_KEY, DEMO_MAINTENANCE);
+  (function authInit(){
+  const session = loadSession();
+  if(session){
+    // Verify user still exists
+    const found = appUsers.find(u => u.id === session.id && u.username === session.username);
+    if(found){
+      currentUser = { id:found.id, username:found.username, role:found.role };
+      showApp();
+      return;
+    }
+  }
+  // Show login screen
+  document.getElementById('loginScreen').style.display = 'flex';
+})();
 let currentView = 'dashboard';
 let editMode    = false;
 let editingCode = null;
